@@ -38,10 +38,35 @@ def build_commit_map(commits1, commits2):
     commits1 = sorted(commits1, key=lambda c: c.timestamp)
     commits2 = sorted(commits2, key=lambda c: c.timestamp)
     commit_map = dict(map(lambda c: (c.timestamp, (c, None)), commits1))
+    orphan_commits2 = []
+    print("Building commit map...")
     for c in commits2:
         entry = commit_map.get(c.timestamp, (None, None))
         entry = (entry[0], c)
         commit_map[c.timestamp] = entry
+        if entry[0] is None:
+            orphan_commits2.append(c)
+
+    if orphan_commits2:
+        print("Fixing orphaned commits...")
+        did_fix = True
+        orphan_commits1 = [e[0] for e in commit_map.values() if e[1] is None]
+        while did_fix:
+            did_fix = False
+            for c2 in orphan_commits2:
+                for c1 in orphan_commits1:
+                    if c1.description.strip() == c2.description.strip():
+                        print("Mapping '%s' to '%s'" % (c1.nodeid, c2.nodeid))
+                        print("  Similar description: %s" % c1.description)
+                        print("  Timestamp difference: %d" % (c2.timestamp - c1.timestamp))
+                        commit_map[c1.timestamp] = (c1, c2)
+                        orphan_commits1.remove(c1)
+                        orphan_commits2.remove(c2)
+                        did_fix = True
+                        break
+                if did_fix:
+                    break
+
     return commit_map
 
 
@@ -57,6 +82,7 @@ def main():
     parser.add_argument(
             'mapfile',
             metavar='MAPFILE',
+            nargs='?',
             help="The path to the mapfile to generate.")
     res = parser.parse_args()
 
