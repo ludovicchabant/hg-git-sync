@@ -128,7 +128,6 @@ def main():
             epilog="Don't trust scripts you found on the web! Backup your stuff!")
     parser.add_argument(
             '--rebuild',
-            nargs=1,
             metavar='REMOTE',
             help="Rebuild the Git repo from the given remote URL.")
     parser.add_argument(
@@ -149,6 +148,7 @@ def main():
         if os.path.isdir(git_repo):
             shutil.rmtree(git_repo)
         print("Syncing it again into: %s" % git_repo)
+        print("                 from: %s" % res.rebuild)
         git_output = subprocess.check_output([
             'git', 'clone', '--bare', res.rebuild, git_repo])
 
