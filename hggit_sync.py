@@ -149,7 +149,7 @@ def main():
             shutil.rmtree(git_repo)
         print("Syncing it again into: %s" % git_repo)
         print("                 from: %s" % res.rebuild)
-        git_output = subprocess.check_output([
+        subprocess.check_call([
             'git', 'clone', '--bare', res.rebuild, git_repo])
 
     if not os.path.exists(git_repo):
@@ -160,16 +160,16 @@ def main():
     hg_output = subprocess.check_output([
         'hg', 'log',
         '--template', "{node} {date}\n{firstline(desc)}\n\n"])
-    hg_commits = parse_commits(hg_output)
+    hg_commits = parse_commits(hg_output.decode('utf8'))
 
     os.chdir(git_repo)
     git_output = subprocess.check_output([
         'git', 'log', '--format=%H %ct%n%s%n%n'])
-    git_commits = parse_commits(git_output)
+    git_commits = parse_commits(git_output.decode('utf8'))
     os.chdir(hg_repo)
 
     commit_map = build_commit_map(git_commits, hg_commits)
-    for key, vals in commit_map.iteritems():
+    for key, vals in commit_map.items():
         for val in vals:
             if val[0] is None:
                 print("Mercurial commit '%s' (%s) has no Git mirror yet: %s" %
@@ -181,7 +181,7 @@ def main():
     map_file = res.mapfile or os.path.join(hg_repo, '.hg', 'git-mapfile')
     print("Saving map file: %s" % map_file)
     with codecs.open(map_file, 'w', encoding='utf8') as fp:
-        for key, vals in commit_map.iteritems():
+        for key, vals in commit_map.items():
             for val in vals:
                 if val[0] is None or val[1] is None:
                     continue
